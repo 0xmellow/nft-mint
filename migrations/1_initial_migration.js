@@ -13,7 +13,7 @@ module.exports = (deployer, network, accounts) => {
 };
 
 async function NFT(deployer, network, accounts) {
-  NFTInstance = await NFTContract.new("Test", "TST", "https://gateway.pinata.cloud/ipfs/QmaAbzY59uSPg5w26v12gHPa28gGVFCHVeqabHGLSBFkMZ/", {from: accounts[3]})
+  NFTInstance = await NFTContract.new("Test", "TST", "https://boredapeyachtclub.com/api/mutants/", {from: accounts[3]})
   console.log(NFTInstance.address + " NFTInstance")
 }
 
