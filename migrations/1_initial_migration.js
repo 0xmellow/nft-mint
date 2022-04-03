@@ -1,3 +1,5 @@
+var Web3 = require('web3');
+
 var NFTContract = artifacts.require("NFT.sol");
 var MinterContract = artifacts.require("Minter.sol");
 
@@ -18,7 +20,15 @@ async function NFT(deployer, network, accounts) {
 }
 
 async function Minter(deployer, network, accounts) {
-  MinterInstance = await MinterContract.new(NFTInstance.address, '0x39ed386158d68982f8e55868ceed4450a5e9c406e1d488af5193b13e9bcb7357', '0x2c3a4568425b1453d805c433852df2a3d34ef324ef36bc02e240b11340ad9f05', {from: accounts[3]})
+  var _bracket_prices = [242, 842, 3042, 4042, 4142, 4200]
+  var _token_id_brackets = ['0.16', '0.2', '0.24', '0.42', '1.42', '4.2']
+  for (i = 0; i < _token_id_brackets.length; i++)
+  {
+    
+    _token_id_brackets[i] = Web3.utils.toWei(_token_id_brackets[i], 'ether')
+  }
+  console.log(_token_id_brackets)
+  MinterInstance = await MinterContract.new(NFTInstance.address, '0x39ed386158d68982f8e55868ceed4450a5e9c406e1d488af5193b13e9bcb7357', '0x2c3a4568425b1453d805c433852df2a3d34ef324ef36bc02e240b11340ad9f05', _bracket_prices, _token_id_brackets, {from: accounts[3]})
     console.log(MinterInstance.address + " MinterInstance")
 }
 
