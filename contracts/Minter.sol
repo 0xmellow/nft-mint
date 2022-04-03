@@ -79,24 +79,29 @@ contract Minter is Ownable, PaymentSplitter {
     myNFT.mint(msg.sender);
   }
 
-  // function multiMint(uint256 amount) public payable
-  // {
-  //   // Check if open
-  //   require(block.timestamp > generalPublicOpenTime, "Sale not open");
-  //   // Check price brackets
-  //   checkPriceBrackets();
-  //   if (myNFT.nextTokenId() + amount >= token_id_brackets[current_bracket])
-  //   {
-  //     amount = token_id_brackets[current_bracket] - myNFT.nextTokenId();
-  //   }
-  //   // Check payment
-  //   require(msg.value >= amount * bracket_prices[current_bracket]);
-  //   // Mint
-  //   for (uint256 i = 0; i < amount; i++)
-  //   {
-  //     myNFT.mint(msg.sender);
-  //   }
-  // }
+  function multiMint(uint256 amount) public payable
+  {
+    // Check if open
+    require(block.timestamp > generalPublicOpenTime, "Sale not open");
+    // Check price brackets
+    bool shouldIncreaseBracket = false;
+    if (myNFT.nextTokenId() + amount >= token_id_brackets[current_bracket])
+    {
+      amount = token_id_brackets[current_bracket] - myNFT.nextTokenId();
+      shouldIncreaseBracket = true;
+    }
+    // Check payment
+    require(msg.value >= amount * bracket_prices[current_bracket]);
+    // Mint
+    for (uint256 i = 0; i < amount; i++)
+    {
+      myNFT.mint(msg.sender);
+    }
+    if(shouldIncreaseBracket)
+    {
+      checkPriceBrackets();
+    }
+  }
 
   function checkPriceBrackets()
   internal  
