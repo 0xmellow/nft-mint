@@ -11,15 +11,16 @@ contract Minter is Ownable, PaymentSplitter {
   NFT public myNFT;
   bytes32 immutable public root_presale;
   bytes32 immutable public root_team_alloc;
-  bytes32 immutable public root_giveaway;
+  bytes32 public root_giveaway;
   uint256[] public token_id_brackets;
   uint256[] public bracket_prices;
   uint256 public current_bracket;
-  uint256 preSaleOpenTime;
-  uint256 preSaleCloseTime;
-  uint256 generalPublicOpenTime;
+  uint256 public preSaleOpenTime;
+  uint256 public preSaleCloseTime;
+  uint256 public generalPublicOpenTime;
   mapping(address => uint256) public mintedFromPresale;
   mapping(address => uint256) public mintedFromTeam;
+  uint256 public totalMintedGiveaway;
 
   constructor(NFT _myNFT, bytes32 _root_presale, bytes32 _root_team_alloc, bytes32 _root_giveaway, address[] memory payees, uint256[] memory shares_) PaymentSplitter(payees, shares_)
   {
@@ -27,17 +28,6 @@ contract Minter is Ownable, PaymentSplitter {
     root_presale = _root_presale;
     root_team_alloc = _root_team_alloc;
     root_giveaway = _root_giveaway;
-  }
-
-  function setUpSales(uint256[] memory _bracket_prices, uint256[] memory _token_id_brackets, uint256[3] memory _sale_open_times) public
-  onlyOwner
-  {
-    require(_bracket_prices.length == _token_id_brackets.length);
-    bracket_prices = _bracket_prices;
-    token_id_brackets = _token_id_brackets;
-    preSaleOpenTime = _sale_open_times[0];
-    preSaleCloseTime = _sale_open_times[1];
-    generalPublicOpenTime = _sale_open_times[2];
   }
 
   function mintPresale(bytes32[] calldata proof, uint256 authorizedAmount, uint256 mintAmount) public payable
@@ -51,7 +41,7 @@ contract Minter is Ownable, PaymentSplitter {
     // Check if user has minted the maximum personally allowed
     require(mintedFromPresale[msg.sender] + mintAmount <= authorizedAmount, "Already minted max amount");
     // Check price brackets
-    checkPriceBrackets();
+    _checkPriceBrackets();
     // Check if amount moves total minted above current bracket
     require(myNFT.nextTokenId() + mintAmount < token_id_brackets[current_bracket], "Not enough NFT left in current bracket");
     // Check if max reached
@@ -83,7 +73,7 @@ contract Minter is Ownable, PaymentSplitter {
       myNFT.mint(msg.sender);
     }
     // Check price brackets
-    checkPriceBrackets();
+    _checkPriceBrackets();
   }
 
   function mint() public payable
@@ -91,7 +81,7 @@ contract Minter is Ownable, PaymentSplitter {
     // Check if open
     require(block.timestamp > generalPublicOpenTime, "Sale not open");
     // Check price brackets
-    checkPriceBrackets();
+    _checkPriceBrackets();
     // Check payment
     require(msg.value >= bracket_prices[current_bracket], "Payment too low");
     // Mint
@@ -103,7 +93,7 @@ contract Minter is Ownable, PaymentSplitter {
     // Check if open
     require(block.timestamp > generalPublicOpenTime, "Sale not open");
     // Check if amount moves brackets one step up
-    checkPriceBrackets();
+    _checkPriceBrackets();
     // Check if amount moves above current bracket
     require(myNFT.nextTokenId() + amount < token_id_brackets[current_bracket], "Not enough NFT left in current bracket");
 
@@ -116,37 +106,21 @@ contract Minter is Ownable, PaymentSplitter {
     }
   }
 
-  function checkPriceBrackets()
-  internal  
+  function mintGiveaway(bytes32[] calldata proof, uint256 authorizedAmount, uint256 mintAmount)  public
   {
-      if (myNFT.nextTokenId() >= token_id_brackets[current_bracket])
-      {
-        current_bracket += 1;
-      }
-  }
-
-  function updateBracketAfterPresale()
-  public  
-  {
-    // Check presale closed
-    require(block.timestamp > preSaleCloseTime, "Presale not closed");
-    // Check if brackets needs updating
-      if (1 > current_bracket)
-      {
-        current_bracket += 1;
-      }
-  }
-
-  function _leaf(address account, uint256 amount)
-  internal pure returns (bytes32)
-  {
-      return keccak256(abi.encodePacked(account, amount));
-  }
-
-  function _verify(bytes32[] memory proof, bytes32 root, bytes32 leaf)
-  internal pure returns (bool)
-  {
-      return MerkleProof.verify(proof, root, leaf);
+    // Check if whitelisted
+    require(_verify(proof, root_giveaway,_leaf(msg.sender, authorizedAmount)), "Invalid merkle proof");
+    // Check if total of giveaway is coherent
+    require(totalMintedGiveaway + mintAmount <= 100, "Max minted for giveaway");
+    // Increment giveaway counter
+    totalMintedGiveaway += mintAmount;
+    // Mint
+    for (uint256 i = 0; i < mintAmount; i++)
+    {
+      myNFT.mint(msg.sender);
+    }
+    // Check price brackets
+    _checkPriceBrackets();
   }
 
   function getPrice()
@@ -165,6 +139,18 @@ contract Minter is Ownable, PaymentSplitter {
     
   }
 
+  function updateBracketAfterPresale()
+  public  
+  {
+    // Check presale closed
+    require(block.timestamp > preSaleCloseTime, "Presale not closed");
+    // Check if brackets needs updating
+      if (1 > current_bracket)
+      {
+        current_bracket += 1;
+      }
+  }
+
   function verifyPresale(bytes32[] calldata proof, address sender, uint256 amount)
   public
   view
@@ -172,5 +158,48 @@ contract Minter is Ownable, PaymentSplitter {
   {
     return _verify(proof, root_presale,_leaf(sender, amount));
   }
+
+  function setUpSales(uint256[] memory _bracket_prices, uint256[] memory _token_id_brackets, uint256[3] memory _sale_open_times) public
+  onlyOwner
+  {
+    require(_bracket_prices.length == _token_id_brackets.length);
+    bracket_prices = _bracket_prices;
+    token_id_brackets = _token_id_brackets;
+    preSaleOpenTime = _sale_open_times[0];
+    preSaleCloseTime = _sale_open_times[1];
+    generalPublicOpenTime = _sale_open_times[2];
+  }
+
+  function updateGiveAwayRoot(bytes32 _root_giveaway) public
+  onlyOwner
+  {
+    root_giveaway = _root_giveaway;
+  }
+
+
+
+  function _leaf(address account, uint256 amount)
+  internal pure returns (bytes32)
+  {
+      return keccak256(abi.encodePacked(account, amount));
+  }
+
+  function _verify(bytes32[] memory proof, bytes32 root, bytes32 leaf)
+  internal pure returns (bool)
+  {
+      return MerkleProof.verify(proof, root, leaf);
+  }
+
+
+  function _checkPriceBrackets()
+  internal  
+  {
+      if (myNFT.nextTokenId() >= token_id_brackets[current_bracket])
+      {
+        current_bracket += 1;
+      }
+  }
+
+
 
 }
