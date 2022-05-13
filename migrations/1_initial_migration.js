@@ -9,7 +9,7 @@ module.exports = (deployer, network, accounts) => {
         await NFT(deployer, network, accounts); 
         await Minter(deployer, network, accounts); 
         await perms(deployer, network, accounts); 
-        // await testVerify(deployer, network, accounts); 
+        await testVerify(deployer, network, accounts); 
         // await testMint(deployer, network, accounts); 
     });
 };
@@ -28,7 +28,7 @@ async function Minter(deployer, network, accounts) {
     _token_id_brackets[i] = Web3.utils.toWei(_token_id_brackets[i], 'ether')
   }
   console.log(_token_id_brackets)
-  MinterInstance = await MinterContract.new(NFTInstance.address, '0x39ed386158d68982f8e55868ceed4450a5e9c406e1d488af5193b13e9bcb7357', '0x2c3a4568425b1453d805c433852df2a3d34ef324ef36bc02e240b11340ad9f05', _bracket_prices, _token_id_brackets, {from: accounts[3]})
+  MinterInstance = await MinterContract.new(NFTInstance.address, '0x37d7c26b00334df99d50391aaedbd72f8b8d5554161ca54b45a1a61e1c3e5923', '0x37d7c26b00334df99d50391aaedbd72f8b8d5554161ca54b45a1a61e1c3e5923', ['0x0F09F8d44A1731B30F6ABBAE0E545b6ab8Cd335a'], [1], {from: accounts[3]})
     console.log(MinterInstance.address + " MinterInstance")
 }
 
@@ -37,14 +37,14 @@ async function perms(deployer, network, accounts) {
 }
 
 async function testVerify(deployer, network, accounts) {
-  var bool1 = await MinterInstance.verifyPresaleOne(['0xb1f58f70664b685e09f08e88966f12671c5fdc9c89fe7790bac65fe4dfe215a0','0x1b8ad64872b19351b588ad7775b9ef83dadee61616a7a141ed369b5519cc6ae6','0xf16218e8536264d1b52ab2bcacca339bb40c41912d0e525b7ab757f57602bba0'],'0x0F09F8d44A1731B30F6ABBAE0E545b6ab8Cd335a', {from: accounts[3]})
-  var bool2 = await MinterInstance.verifyPresaleTwo(['0x99bb638cf5ebae695d773f881c238e3580b4f52a69e2098897a4241f5ba220e0','0x2ea4291f6a260f6b00862b64a65583e99cf1ae2257829f5340d677ab004be8a2','0xfd07b2f68162be1e8832b5a9e470027b2042695b7c60da1c7eff2de4f423f9fe'],'0x0F09F8d44A1731B30F6ABBAE0E545b6ab8Cd335a',{from: accounts[3]})
-  var bool3 = await MinterInstance.verifyPresaleOne(['0x3ef0fb8696610f7b1bf0c8f9ba7fd3f7df293f2499fae35c42159cf5488d08fd'],'0x3FDD931A1c1d4F3B86946D21A552b18A4CeC7A3C',{from: accounts[3]})
-  var bool4 = await MinterInstance.verifyPresaleTwo(['0x3ef0fb8696610f7b1bf0c8f9ba7fd3f7df293f2499fae35c42159cf5488d08fd'],'0x3FDD931A1c1d4F3B86946D21A552b18A4CeC7A3C',{from: accounts[3]})
-  console.log(bool1)
+  var bool1 = await MinterInstance.verifyPresale(['0xd1b6ff36893ff713bdcdf3699fb8a8c736a7215bca0241ee757554b5c7749253','0xe30fc3b8f6ddb0cdc5815005c62cbda977cec5ed9fe11458b6754ccd6b62817c','0xe1eeb7955ea5b71efb55237ae8e901bc6d26d5bd78bb9fadba4d383926d823d5'],'0x7DdC72Eb160F6A325A5927299b2715Abd0bEA55B', 4, {from: accounts[3]})
+  var bool2 = await MinterInstance.verifyPresale(['0xa11b023860687d0c3f4a20ea9cbc14df29e6e91adbad60b4aa335d5b27ddf73f'],'0x8de806462823aD25056eE8104101F9367E208C14', 2, {from: accounts[3]})
+ var rootPresale = await MinterInstance.root_presale()
+  console.log(rootPresale)
+  console.log(bool1) 
   console.log(bool2)
-  console.log(bool3)
-  console.log(bool4)
+
+  // console.log(bool4)
 }
 
 async function testMint(deployer, network, accounts) {

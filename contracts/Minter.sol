@@ -9,20 +9,24 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 contract Minter is Ownable, PaymentSplitter {
 
   NFT public myNFT;
-  bytes32 immutable public root_presale_one;
-  bytes32 immutable public root_presale_two;
+  bytes32 immutable public root_presale;
+  bytes32 immutable public root_team_alloc;
+  bytes32 immutable public root_giveaway;
   uint256[] public token_id_brackets;
   uint256[] public bracket_prices;
   uint256 public current_bracket;
-  uint256 preSaleOneOpenTime;
-  uint256 preSaleTwoOpenTime;
+  uint256 preSaleOpenTime;
+  uint256 preSaleCloseTime;
   uint256 generalPublicOpenTime;
+  mapping(address => uint256) public mintedFromPresale;
+  mapping(address => uint256) public mintedFromTeam;
 
-  constructor(NFT _myNFT, bytes32 _root_presale_one, bytes32 _root_presale_two, address[] memory payees, uint256[] memory shares_) PaymentSplitter(payees, shares_)
+  constructor(NFT _myNFT, bytes32 _root_presale, bytes32 _root_team_alloc, bytes32 _root_giveaway, address[] memory payees, uint256[] memory shares_) PaymentSplitter(payees, shares_)
   {
     myNFT = _myNFT;
-    root_presale_one = _root_presale_one;
-    root_presale_two = _root_presale_two;
+    root_presale = _root_presale;
+    root_team_alloc = _root_team_alloc;
+    root_giveaway = _root_giveaway;
   }
 
   function setUpSales(uint256[] memory _bracket_prices, uint256[] memory _token_id_brackets, uint256[3] memory _sale_open_times) public
@@ -31,42 +35,57 @@ contract Minter is Ownable, PaymentSplitter {
     require(_bracket_prices.length == _token_id_brackets.length);
     bracket_prices = _bracket_prices;
     token_id_brackets = _token_id_brackets;
-    preSaleOneOpenTime = _sale_open_times[0];
-    preSaleTwoOpenTime = _sale_open_times[1];
+    preSaleOpenTime = _sale_open_times[0];
+    preSaleCloseTime = _sale_open_times[1];
     generalPublicOpenTime = _sale_open_times[2];
   }
 
-  function mintPresaleOne(bytes32[] calldata proof) public payable
+  function mintPresale(bytes32[] calldata proof, uint256 authorizedAmount, uint256 mintAmount) public payable
   {
     // Check if whitelisted
-    require(_verify(proof, root_presale_one,_leaf(msg.sender)), "Invalid merkle proof");
+    require(_verify(proof, root_presale,_leaf(msg.sender, authorizedAmount)), "Invalid merkle proof");
     // Check if open
-    require(block.timestamp > preSaleOneOpenTime, "Sale not open");
+    require(block.timestamp > preSaleOpenTime, "Presale not open");
+    // Check if closed
+    require(block.timestamp < preSaleCloseTime, "Presale closed");
+    // Check if user has minted the maximum personally allowed
+    require(mintedFromPresale[msg.sender] + mintAmount <= authorizedAmount, "Already minted max amount");
     // Check price brackets
     checkPriceBrackets();
+    // Check if amount moves total minted above current bracket
+    require(myNFT.nextTokenId() + mintAmount < token_id_brackets[current_bracket], "Not enough NFT left in current bracket");
     // Check if max reached
-    require(0 >= current_bracket, "Max reached");
+    require(1 > current_bracket, "Max reached");
     // Check payment
-    require(msg.value >= bracket_prices[current_bracket], "Payment too low");
+    require(msg.value >= mintAmount * bracket_prices[current_bracket]);
+    // Increment presale counter
+    mintedFromPresale[msg.sender] += mintAmount;
     // Mint
-    myNFT.mint(msg.sender);
+    for (uint256 i = 0; i < mintAmount; i++)
+    {
+      myNFT.mint(msg.sender);
+    }
+    // Increment presale counter
+    mintedFromPresale[msg.sender] += 1;
   }
 
-  function mintPresaleTwo(bytes32[] calldata proof) public payable
+  function mintTeamAlloc(bytes32[] calldata proof, uint256 authorizedAmount, uint256 mintAmount)  public
   {
     // Check if whitelisted
-    require(_verify(proof, root_presale_two, _leaf(msg.sender)), "Invalid merkle proof");
-    // Check if open
-    require(block.timestamp > preSaleTwoOpenTime, "Sale not open");
+    require(_verify(proof, root_team_alloc,_leaf(msg.sender, authorizedAmount)), "Invalid merkle proof");
+    // Check if user has minted the maximum personally allowed
+    require(block.timestamp < generalPublicOpenTime, "Team claim finished");
+    // Increment presale counter
+    mintedFromTeam[msg.sender] += mintAmount;
+    // Mint
+    for (uint256 i = 0; i < mintAmount; i++)
+    {
+      myNFT.mint(msg.sender);
+    }
     // Check price brackets
     checkPriceBrackets();
-    // Check if max reached
-    require(1 >= current_bracket, "Max reached");
-    // Check payment
-    require(msg.value >= bracket_prices[current_bracket], "Payment too low");
-    // Mint
-    myNFT.mint(msg.sender);
   }
+
   function mint() public payable
   {
     // Check if open
@@ -83,23 +102,17 @@ contract Minter is Ownable, PaymentSplitter {
   {
     // Check if open
     require(block.timestamp > generalPublicOpenTime, "Sale not open");
-    // Check price brackets
-    bool shouldIncreaseBracket = false;
-    if (myNFT.nextTokenId() + amount >= token_id_brackets[current_bracket])
-    {
-      amount = token_id_brackets[current_bracket] - myNFT.nextTokenId();
-      shouldIncreaseBracket = true;
-    }
+    // Check if amount moves brackets one step up
+    checkPriceBrackets();
+    // Check if amount moves above current bracket
+    require(myNFT.nextTokenId() + amount < token_id_brackets[current_bracket], "Not enough NFT left in current bracket");
+
     // Check payment
     require(msg.value >= amount * bracket_prices[current_bracket]);
     // Mint
     for (uint256 i = 0; i < amount; i++)
     {
       myNFT.mint(msg.sender);
-    }
-    if(shouldIncreaseBracket)
-    {
-      checkPriceBrackets();
     }
   }
 
@@ -112,10 +125,22 @@ contract Minter is Ownable, PaymentSplitter {
       }
   }
 
-  function _leaf(address account)
+  function updateBracketAfterPresale()
+  public  
+  {
+    // Check presale closed
+    require(block.timestamp > preSaleCloseTime, "Presale not closed");
+    // Check if brackets needs updating
+      if (1 > current_bracket)
+      {
+        current_bracket += 1;
+      }
+  }
+
+  function _leaf(address account, uint256 amount)
   internal pure returns (bytes32)
   {
-      return keccak256(abi.encodePacked(account));
+      return keccak256(abi.encodePacked(account, amount));
   }
 
   function _verify(bytes32[] memory proof, bytes32 root, bytes32 leaf)
@@ -140,20 +165,12 @@ contract Minter is Ownable, PaymentSplitter {
     
   }
 
-  function verifyPresaleOne(bytes32[] calldata proof, address sender)
+  function verifyPresale(bytes32[] calldata proof, address sender, uint256 amount)
   public
   view
   returns (bool)
   {
-    return _verify(proof, root_presale_one,_leaf(sender));
-  }
-
-  function verifyPresaleTwo(bytes32[] calldata proof, address sender)
-  public
-  view
-  returns (bool)
-  {
-    return _verify(proof, root_presale_two,_leaf(sender));
+    return _verify(proof, root_presale,_leaf(sender, amount));
   }
 
 }
