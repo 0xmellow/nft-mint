@@ -9,8 +9,8 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 contract Minter is Ownable, PaymentSplitter {
 
   NFT public myNFT;
-  bytes32 immutable public root_presale;
-  bytes32 immutable public root_team_alloc;
+  bytes32 public root_presale;
+  bytes32 public root_team_alloc;
   bytes32 public root_giveaway;
   uint256[] public token_id_brackets;
   uint256[] public bracket_prices;
@@ -21,13 +21,13 @@ contract Minter is Ownable, PaymentSplitter {
   mapping(address => uint256) public mintedFromPresale;
   mapping(address => uint256) public mintedFromTeam;
   uint256 public totalMintedGiveaway;
+  event updateRootsEvent(bytes32 root_presale, bytes32 root_team_alloc, bytes32 root_giveaway);
+  event setPriceBrackets(uint256[] bracket_prices, uint256[] token_id_brackets);
+  event setSalesDates(uint256[3] salesTimes);
 
-  constructor(NFT _myNFT, bytes32 _root_presale, bytes32 _root_team_alloc, bytes32 _root_giveaway, address[] memory payees, uint256[] memory shares_) PaymentSplitter(payees, shares_)
+  constructor(NFT _myNFT, address[] memory payees, uint256[] memory shares_) PaymentSplitter(payees, shares_)
   {
     myNFT = _myNFT;
-    root_presale = _root_presale;
-    root_team_alloc = _root_team_alloc;
-    root_giveaway = _root_giveaway;
   }
 
   function mintPresale(bytes32[] calldata proof, uint256 authorizedAmount, uint256 mintAmount) public payable
@@ -40,12 +40,8 @@ contract Minter is Ownable, PaymentSplitter {
     require(block.timestamp < preSaleCloseTime, "Presale closed");
     // Check if user has minted the maximum personally allowed
     require(mintedFromPresale[msg.sender] + mintAmount <= authorizedAmount, "Already minted max amount");
-    // Check price brackets
-    _checkPriceBrackets();
-    // Check if amount moves total minted above current bracket
-    require(myNFT.nextTokenId() + mintAmount < token_id_brackets[current_bracket], "Not enough NFT left in current bracket");
-    // Check if max reached
-    require(1 > current_bracket, "Max reached");
+    // Check if max mint for presale reached
+    require(myNFT.nextTokenId() + mintAmount < token_id_brackets[0], "Not enough NFT left in current bracket");
     // Check payment
     require(msg.value >= mintAmount * bracket_prices[current_bracket]);
     // Increment presale counter
@@ -151,15 +147,8 @@ contract Minter is Ownable, PaymentSplitter {
       }
   }
 
-  function verifyPresale(bytes32[] calldata proof, address sender, uint256 amount)
+  function setUpSales(uint256[] memory _bracket_prices, uint256[] memory _token_id_brackets, uint256[3] memory _sale_open_times) 
   public
-  view
-  returns (bool)
-  {
-    return _verify(proof, root_presale,_leaf(sender, amount));
-  }
-
-  function setUpSales(uint256[] memory _bracket_prices, uint256[] memory _token_id_brackets, uint256[3] memory _sale_open_times) public
   onlyOwner
   {
     require(_bracket_prices.length == _token_id_brackets.length);
@@ -168,12 +157,17 @@ contract Minter is Ownable, PaymentSplitter {
     preSaleOpenTime = _sale_open_times[0];
     preSaleCloseTime = _sale_open_times[1];
     generalPublicOpenTime = _sale_open_times[2];
+    emit setPriceBrackets(_bracket_prices, _token_id_brackets);
+    emit setSalesDates(_sale_open_times);
   }
 
-  function updateGiveAwayRoot(bytes32 _root_giveaway) public
+  function updateRoots(bytes32 _root_giveaway, bytes32 _root_presale, bytes32 _root_team_alloc) public
   onlyOwner
   {
     root_giveaway = _root_giveaway;
+    root_presale = _root_presale;
+    root_team_alloc = _root_team_alloc;
+    emit updateRootsEvent( root_presale,  root_team_alloc,  root_giveaway);
   }
 
 
