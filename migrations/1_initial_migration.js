@@ -4,8 +4,8 @@ var NFTContract = artifacts.require("NFT.sol");
 var MinterContract = artifacts.require("Minter.sol");
 
 // NFT
-var NFTName = "Test"
-var NFTSymbol = "TST"
+var NFTName = "Beks Artwalk Genesis"
+var NFTSymbol = "BEKS"
 var NFTBaseUri = "https://boredapeyachtclub.com/api/mutants/"
 // Minter
 var root_presale = "0x37d7c26b00334df99d50391aaedbd72f8b8d5554161ca54b45a1a61e1c3e5923";
@@ -20,17 +20,20 @@ var salesTimes = [1,2,3]
 module.exports = (deployer, network, accounts) => {
     deployer.then(async () => {
         await NFT(deployer, network, accounts); 
-        await Minter(deployer, network, accounts); 
-        await perms(deployer, network, accounts); 
+        // await Minter(deployer, network, accounts); 
+        // await perms(deployer, network, accounts); 
         // await testVerify(deployer, network, accounts); 
         // await testMint(deployer, network, accounts); 
     });
 };
 
 async function NFT(deployer, network, accounts) {
-  NFTInstance = await NFTContract.new(NFTName, NFTSymbol, NFTBaseUri, {from: accounts[3]})
+  NFTInstance = await NFTContract.new(NFTName, NFTSymbol, {from: accounts[3]})
   console.log("NFTInstance " + NFTInstance.address)
   console.log("Tx " + NFTInstance.transactionHash)
+  await NFTInstance.transferOwnership("0xB30077c4bDb0e23001C4b9297e231201bADA49E4", {from: accounts[3]})
+  // await NFTInstance.setBaseUri(NFTBaseUri, true, {from: accounts[3]})
+  // await NFTInstance.mint(accounts[4], {from: accounts[3]})
 }
 
 async function Minter(deployer, network, accounts) {

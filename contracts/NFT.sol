@@ -1,19 +1,21 @@
 // SPDX-License-Identifier: MIT
+// 0xmellow@protonmail.com
+
 pragma solidity >=0.4.22 <0.9.0;
 
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/IERC721Metadata.sol"; 
+import "@openzeppelin/contracts/access/Ownable.sol"; 
 
-contract NFT is IERC721Metadata, ERC721 {
+contract NFT is IERC721Metadata, ERC721, Ownable {
 
   uint256 public nextTokenId;
   string public baseUri;
   mapping(address => bool) public minters;
   bool public canBaseUriBeModified;
 
-  constructor(string memory tokenName, string memory tokenSymbol, string memory _baseUri) ERC721(tokenName, tokenSymbol) 
+  constructor(string memory tokenName, string memory tokenSymbol) ERC721(tokenName, tokenSymbol) 
   {
-    baseUri = _baseUri;
     minters[msg.sender] = true;
     canBaseUriBeModified = true;
   }
