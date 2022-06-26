@@ -18,8 +18,9 @@ contract Minter is Ownable, PaymentSplitter {
   uint256 public preSaleOpenTime;
   uint256 public preSaleCloseTime;
   uint256 public generalPublicOpenTime;
-  mapping(address => uint256) public mintedFromPresale;
+  // mapping(address => uint256) public mintedFromPresale;
   mapping(address => uint256) public mintedFromTeam;
+  mapping(address => uint256) public mintedFromGiveAway;
   uint256 public totalMintedGiveaway;
   event updateRootsEvent(bytes32 root_presale, bytes32 root_team_alloc, bytes32 root_giveaway);
   event setPriceBrackets(uint256[] bracket_prices, uint256[] token_id_brackets);
@@ -30,39 +31,62 @@ contract Minter is Ownable, PaymentSplitter {
     myNFT = _myNFT;
   }
 
-  function mintPresale(bytes32[] calldata proof, uint256 authorizedAmount, uint256 mintAmount) public payable
+  function mintPresale(bytes32[] calldata proof, uint256 mintAmount) public payable
   {
     // Check if whitelisted
-    require(_verify(proof, root_presale,_leaf(msg.sender, authorizedAmount)), "Invalid merkle proof");
+    require(_verify(proof, root_presale,_leaf(msg.sender, 0)), "Invalid merkle proof");
     // Check if open
     require(block.timestamp > preSaleOpenTime, "Presale not open");
     // Check if closed
     require(block.timestamp < preSaleCloseTime, "Presale closed");
     // Check if user has minted the maximum personally allowed
-    require(mintedFromPresale[msg.sender] + mintAmount <= authorizedAmount, "Already minted max amount");
+    // require(mintedFromPresale[msg.sender] + mintAmount <= authorizedAmount, "Already minted max amount");
     // Check if max mint for presale reached
-    require(myNFT.nextTokenId() + mintAmount < token_id_brackets[0], "Not enough NFT left in current bracket");
+    // require(myNFT.nextTokenId() + mintAmount < token_id_brackets[0], "Not enough NFT left in current bracket");
     // Check payment
     require(msg.value >= mintAmount * bracket_prices[current_bracket]);
     // Increment presale counter
-    mintedFromPresale[msg.sender] += mintAmount;
+    // mintedFromPresale[msg.sender] += mintAmount;
     // Mint
     for (uint256 i = 0; i < mintAmount; i++)
     {
       myNFT.mint(msg.sender);
     }
     // Increment presale counter
-    mintedFromPresale[msg.sender] += 1;
+    // mintedFromPresale[msg.sender] += 1;
   }
 
   function mintTeamAlloc(bytes32[] calldata proof, uint256 authorizedAmount, uint256 mintAmount)  public
   {
     // Check if whitelisted
     require(_verify(proof, root_team_alloc,_leaf(msg.sender, authorizedAmount)), "Invalid merkle proof");
+    // Check if team is still allowed to mint
+    require(current_bracket < 2);
+    // require(block.timestamp < generalPublicOpenTime, "Team claim finished");
     // Check if user has minted the maximum personally allowed
-    require(block.timestamp < generalPublicOpenTime, "Team claim finished");
+    require(mintedFromTeam[msg.sender] + mintAmount <= authorizedAmount, "Already minted max amount");
     // Increment presale counter
     mintedFromTeam[msg.sender] += mintAmount;
+    // Mint
+    for (uint256 i = 0; i < mintAmount; i++)
+    {
+      myNFT.mint(msg.sender);
+    }
+    // Check price brackets
+    _checkPriceBrackets();
+  }
+
+  function mintGiveaway(bytes32[] calldata proof, uint256 authorizedAmount, uint256 mintAmount)  public
+  {
+    // Check if whitelisted
+    require(_verify(proof, root_giveaway,_leaf(msg.sender, authorizedAmount)), "Invalid merkle proof");
+    // Check if user has minted the maximum personally allowed
+    require(mintedFromGiveAway[msg.sender] + mintAmount <= authorizedAmount, "Already minted max amount");
+    // Check if total of giveaway is coherent
+    require(totalMintedGiveaway + mintAmount <= 200, "Max minted for giveaway");
+    // Increment giveaway counter
+    totalMintedGiveaway += mintAmount;
+    mintedFromGiveAway[msg.sender] += mintAmount;
     // Mint
     for (uint256 i = 0; i < mintAmount; i++)
     {
@@ -102,22 +126,6 @@ contract Minter is Ownable, PaymentSplitter {
     }
   }
 
-  function mintGiveaway(bytes32[] calldata proof, uint256 authorizedAmount, uint256 mintAmount)  public
-  {
-    // Check if whitelisted
-    require(_verify(proof, root_giveaway,_leaf(msg.sender, authorizedAmount)), "Invalid merkle proof");
-    // Check if total of giveaway is coherent
-    require(totalMintedGiveaway + mintAmount <= 100, "Max minted for giveaway");
-    // Increment giveaway counter
-    totalMintedGiveaway += mintAmount;
-    // Mint
-    for (uint256 i = 0; i < mintAmount; i++)
-    {
-      myNFT.mint(msg.sender);
-    }
-    // Check price brackets
-    _checkPriceBrackets();
-  }
 
   function getPrice()
   public
@@ -132,7 +140,6 @@ contract Minter is Ownable, PaymentSplitter {
     { 
       return bracket_prices[current_bracket];
     }
-    
   }
 
   function updateBracketAfterPresale()
