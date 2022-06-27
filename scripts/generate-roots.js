@@ -6,6 +6,7 @@ const { ethers } = require('ethers');
 const { MerkleTree } = require('./merkleTree.js');
 // const { keccak256 } = require('keccak256');
 const attributionsGiveAway = require('./walletsAndAllowanceList-giveAway.json');
+const attributionsPresale = require('./walletsAndAllowanceList-presale.json');
 
 const { keccak256, bufferToHex } = require('ethereumjs-util');
 var fs = require('fs');
@@ -24,23 +25,34 @@ for (const [key, value] of Object.entries(attributionsGiveAway)) {
   elementsGiveAway.push(_leaf(key, value))
 }
 
+const elementsPresale = []
+for (const [key, value] of Object.entries(attributionsPresale)) {
+  elementsPresale.push(_leaf(key, value))
+}
+
 console.log(elementsGiveAway)
+console.log(elementsPresale)
 // const elementsGiveAway = jsonGiveaway.allowances;
 // const merkleTreeOne = new MerkleTree(elementsPresaleOne);
 // const merkleTreeOne = new MerkleTree(elementsPresaleOne);
 const merkleTreeGiveAway = new MerkleTree(elementsGiveAway, {sortPairs: true })
+const merkleTreePresale = new MerkleTree(elementsPresale, {sortPairs: true })
+
 // const merkleTreeGiveAway = new MerkleTree(Object.entries(attributionsGiveAway).map(token => hashToken(...token).toString('hex')), keccak256, {sortPairs: true });
 // const rootOne = merkleTreeOne.getHexRoot();
 // console.log(rootOne)
 // const rootTwo = merkleTreeTwo.getHexRoot();
 // console.log(rootTwo)
 const rootGiveAway = merkleTreeGiveAway.getHexRoot();
+const rootPresale = merkleTreePresale.getHexRoot();
 console.log(rootGiveAway)
+console.log(rootPresale)
 
-for (const [account, amount] of Object.entries(attributionsGiveAway)) 
+
+for (const [account, amount] of Object.entries(attributionsPresale)) 
 {
 	console.log(_leaf(account, amount))
-	const proof = merkleTreeGiveAway.getHexProof(_leaf(account, amount).toString('hex'));
+	const proof = merkleTreePresale.getHexProof(_leaf(account, amount).toString('hex'));
 	console.log(account, amount)
 	console.log(proof)
 }
