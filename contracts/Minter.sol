@@ -18,13 +18,14 @@ contract Minter is Ownable, PaymentSplitter {
   uint256 public preSaleOpenTime;
   uint256 public preSaleCloseTime;
   uint256 public generalPublicOpenTime;
+  uint256 public generalPublicCloseTime;
   // mapping(address => uint256) public mintedFromPresale;
   mapping(address => uint256) public mintedFromTeam;
   mapping(address => uint256) public mintedFromGiveAway;
   uint256 public totalMintedGiveaway;
   event updateRootsEvent(bytes32 root_presale, bytes32 root_team_alloc, bytes32 root_giveaway);
   event setPriceBrackets(uint256[] bracket_prices, uint256[] token_id_brackets);
-  event setSalesDates(uint256[3] salesTimes);
+  event setSalesDates(uint256[4] salesTimes);
 
   constructor(NFT _myNFT, address[] memory payees, uint256[] memory shares_) PaymentSplitter(payees, shares_)
   {
@@ -100,6 +101,7 @@ contract Minter is Ownable, PaymentSplitter {
   {
     // Check if open
     require(block.timestamp > generalPublicOpenTime, "Sale not open");
+    require(block.timestamp < generalPublicCloseTime, "Sale closed");
     // Check price brackets
     _checkPriceBrackets();
     // Check payment
@@ -112,6 +114,7 @@ contract Minter is Ownable, PaymentSplitter {
   {
     // Check if open
     require(block.timestamp > generalPublicOpenTime, "Sale not open");
+    require(block.timestamp < generalPublicCloseTime, "Sale closed");
     // Check if amount moves brackets one step up
     _checkPriceBrackets();
     // Check if amount moves above current bracket
@@ -133,6 +136,7 @@ contract Minter is Ownable, PaymentSplitter {
     );
     // Check if open
     require(block.timestamp > generalPublicOpenTime, "Sale not open");
+    require(block.timestamp < generalPublicCloseTime, "Sale closed");
     // Check if amount moves brackets one step up
     _checkPriceBrackets();
     // Check if amount moves above current bracket
@@ -175,7 +179,7 @@ contract Minter is Ownable, PaymentSplitter {
       }
   }
 
-  function setUpSales(uint256[] memory _bracket_prices, uint256[] memory _token_id_brackets, uint256[3] memory _sale_open_times) 
+  function setUpSales(uint256[] memory _bracket_prices, uint256[] memory _token_id_brackets, uint256[4] memory _sale_open_times) 
   public
   onlyOwner
   {
@@ -185,6 +189,7 @@ contract Minter is Ownable, PaymentSplitter {
     preSaleOpenTime = _sale_open_times[0];
     preSaleCloseTime = _sale_open_times[1];
     generalPublicOpenTime = _sale_open_times[2];
+    generalPublicCloseTime = _sale_open_times[3];
     emit setPriceBrackets(_bracket_prices, _token_id_brackets);
     emit setSalesDates(_sale_open_times);
   }
