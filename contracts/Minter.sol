@@ -44,7 +44,7 @@ contract Minter is Ownable, PaymentSplitter {
     // Check if max mint for presale reached
     // require(myNFT.nextTokenId() + mintAmount < token_id_brackets[0], "Not enough NFT left in current bracket");
     // Check payment
-    require(msg.value >= mintAmount * bracket_prices[current_bracket]);
+    require(msg.value >= mintAmount * bracket_prices[current_bracket], "Not enough ETH");
     // Increment presale counter
     // mintedFromPresale[msg.sender] += mintAmount;
     // Mint
@@ -123,6 +123,27 @@ contract Minter is Ownable, PaymentSplitter {
     for (uint256 i = 0; i < amount; i++)
     {
       myNFT.mint(msg.sender);
+    }
+  }
+
+  function crossmint(address _to, uint256 amount) public payable {
+    // Check if crossmint
+    require(msg.sender == 0xdAb1a1854214684acE522439684a145E62505233,
+      "This function is for Crossmint only."
+    );
+    // Check if open
+    require(block.timestamp > generalPublicOpenTime, "Sale not open");
+    // Check if amount moves brackets one step up
+    _checkPriceBrackets();
+    // Check if amount moves above current bracket
+    require(myNFT.nextTokenId() + amount < token_id_brackets[current_bracket], "Not enough NFT left in current bracket");
+
+    // Check payment
+    require(msg.value >= amount * bracket_prices[current_bracket]);
+    // Mint
+    for (uint256 i = 0; i < amount; i++)
+    {
+      myNFT.mint(_to);
     }
   }
 
