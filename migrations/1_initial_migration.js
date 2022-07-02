@@ -8,9 +8,9 @@ var NFTName = "Beks Artwalk Genesis"
 var NFTSymbol = "BEKS"
 var NFTBaseUri = "https://nftstorage.link/ipfs/bafybeiap3c6smnkeunwvecox5ylh67n5ipeq4sb2ugaunllv3jwulp3jky/"
 // Minter
-var root_presale = "0x1bcf718f88ac1f40cae2b3d1e91793496e6d56a9279f85b175f27ed23a1d1c77";
-var root_team_alloc = "0x7c86d8d37b1e84b3f6a0c68539f97ac10e55ad1de325db2ccb283c69d45a033b";
-var root_giveaway = "0x7102e3258d3645a09e3fd75acb1b2f11403ab24bb0b828aef4fc04e8c98e9b4c";
+var root_presale = "0xf2f1f5b381b604fb40178da09c14eda52ff09e3091674551f3ddf3653e46728e";
+var root_team_alloc = "0xc6d66a209758720734c21d250e6500bf54d4dd562bd07c979f3e7f0705aeed8b";
+var root_giveaway = "0xf27d40f4e7a90553aa929b81c5be6c5aa645a2d6d7f1d2f1ae3f8fa462e6a110";
 var teamAddresses  = ['0x853cBBBd1F88CEB029dc93c18dC3C0a6E4e34D4F', '0xFf452405679aDB1A5452fFCbA33fd7f22C7d8CFd', '0xbd96382d887ad8a96DBad1B47eC813F2CadAa8bB', '0x9EB514d4c34FF6A76fcD633813fBF00d172807f8', '0x1D63C5b343A82b65947DB9983c7E6614917f1f28', '0xAacffB873ABCbD2a37253a7C5674A6EF1E0C2205', '0xbcE28D7B7b9a010d6eBA503f1E128F2197dA000e', '0xE74C0E19425c27E6Fb08254B7E1C5bd24EAc4A01']
 var teamShares = [475, 365, 50, 50, 20, 20, 10, 10]
 var token_id_brackets = [0, 3041, 4242]
