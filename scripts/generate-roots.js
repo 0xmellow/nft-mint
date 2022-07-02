@@ -55,13 +55,13 @@ const rootPresale = merkleTreePresale.getHexRoot();
 const rootTeam = merkleTreeTeam.getHexRoot();
 
 
-// for (const [account, amount] of Object.entries(attributionsPresale)) 
-// {
-// 	console.log(_leaf(account, amount))
-// 	const proof = merkleTreePresale.getHexProof(_leaf(account, amount).toString('hex'));
-// 	console.log(account, amount)
-// 	console.log(proof)
-// }
+for (const [account, amount] of Object.entries(attributionsTeam)) 
+{
+	console.log(_leaf(account, amount))
+	const proof = merkleTreeTeam.getHexProof(_leaf(account, amount).toString('hex'));
+	console.log(account, amount)
+	console.log(proof)
+}
 
 console.log('rootGiveAway ' + rootGiveAway)
 console.log('rootPresale ' + rootPresale)

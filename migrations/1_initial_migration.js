@@ -8,7 +8,7 @@ var NFTName = "Beks Artwalk Genesis"
 var NFTSymbol = "BEKS"
 var NFTBaseUri = "https://nftstorage.link/ipfs/bafybeiap3c6smnkeunwvecox5ylh67n5ipeq4sb2ugaunllv3jwulp3jky/"
 // Minter
-var root_presale = "0xbf5b237f64097225b3c644bde4ceb420e55312ea83a523067250e3d0df618c71";
+var root_presale = "0xa54f29f2b01ba40825adf3b119b8b2e18e960cd03039f329dd07764973d9a813";
 var root_team_alloc = "0xc6d66a209758720734c21d250e6500bf54d4dd562bd07c979f3e7f0705aeed8b";
 var root_giveaway = "0xf27d40f4e7a90553aa929b81c5be6c5aa645a2d6d7f1d2f1ae3f8fa462e6a110";
 var teamAddresses  = ['0x853cBBBd1F88CEB029dc93c18dC3C0a6E4e34D4F', '0xFf452405679aDB1A5452fFCbA33fd7f22C7d8CFd', '0xbd96382d887ad8a96DBad1B47eC813F2CadAa8bB', '0x9EB514d4c34FF6A76fcD633813fBF00d172807f8', '0x1D63C5b343A82b65947DB9983c7E6614917f1f28', '0xAacffB873ABCbD2a37253a7C5674A6EF1E0C2205', '0xbcE28D7B7b9a010d6eBA503f1E128F2197dA000e', '0xE74C0E19425c27E6Fb08254B7E1C5bd24EAc4A01']
@@ -54,6 +54,8 @@ async function Minter(deployer, network, accounts) {
   // Mainnet
   MinterInstance = await MinterContract.at("0x044c9b5aed360a7e0facca0af30b3f202d456081")
   await MinterInstance.updateRoots(root_giveaway, root_presale, root_team_alloc)
+  // await MinterInstance.mintTeamAlloc( ['0x884464d8df6ad2b5fbe3e6caac307c7dee132258617f6b43e7a629d4edf104fb','0xf7caf8e76c0b0efc9cce0ea557d3e34b864faa18623282616d855edb2b98ffc7','0x82ff9fbf50931fef73edb92af186928562f2abec26954cc42315f9e18677dad8' ], 5,2)
+ 
   // testnet
    // MinterInstance = await MinterContract.at("0x19bf86cd9eb46e9ae61489038f92fc75d6527d6d")
    // await MinterInstance.updateRoots(root_giveaway, root_presale, root_team_alloc, {from: accounts[3]})
