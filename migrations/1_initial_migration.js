@@ -9,8 +9,8 @@ var NFTSymbol = "BEKS"
 var NFTBaseUri = "https://nftstorage.link/ipfs/bafybeiap3c6smnkeunwvecox5ylh67n5ipeq4sb2ugaunllv3jwulp3jky/"
 // Minter
 var root_presale = "0xa54f29f2b01ba40825adf3b119b8b2e18e960cd03039f329dd07764973d9a813";
-var root_team_alloc = "0x8cb488e7f41297af44e7ccd5f7aa9fd4f326a479bef7fccfc3650b2728da79f9";
-var root_giveaway = "0x5d5af64e10bd0ae33c22a8a0718d7c2ad323d9aaea82168bbb6cace6b4e56ab6";
+var root_team_alloc = "0x87525b124af1bd33e1177ec2b92e76d5c22c5ef867105ae5cf9a352632e8b3b3";
+var root_giveaway = "0x4701b7fc78e117718c4ff2289be0eabd04eb78718ae7e58c2fb0e402bf181c5b";
 var teamAddresses  = ['0x853cBBBd1F88CEB029dc93c18dC3C0a6E4e34D4F', '0xFf452405679aDB1A5452fFCbA33fd7f22C7d8CFd', '0xbd96382d887ad8a96DBad1B47eC813F2CadAa8bB', '0x9EB514d4c34FF6A76fcD633813fBF00d172807f8', '0x1D63C5b343A82b65947DB9983c7E6614917f1f28', '0xAacffB873ABCbD2a37253a7C5674A6EF1E0C2205', '0xbcE28D7B7b9a010d6eBA503f1E128F2197dA000e', '0xE74C0E19425c27E6Fb08254B7E1C5bd24EAc4A01']
 var teamShares = [475, 365, 50, 50, 20, 20, 10, 10]
 var token_id_brackets = [0, 3041, 4242]
